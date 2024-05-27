@@ -15,6 +15,9 @@ jobs:
             python-version: '3.12'
             cache: 'pip' # caching pip dependencies
         - run: pip install -r scripts/requirements.txt
+        - run: echo "${TOKEN_JSON}" > token.json
+          env:
+            TOKEN_JSON: ${{ secrets.TOKEN_JSON }}
         - name: Read Emails
           env:
             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
