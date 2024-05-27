@@ -14,14 +14,18 @@ jobs:
           with:
             python-version: '3.12'
             cache: 'pip' # caching pip dependencies
-        - run: pip install -r scripts/requirements.txt
-        - run: echo "${TOKEN_JSON}" > token.json
-          env:
-            TOKEN_JSON: ${{ secrets.TOKEN_JSON }}
+        - run: |
+            echo "::group::pip install -r scripts/requirements.txt"
+            pip install -r scripts/requirements.txt
+            echo "::endgroup::"
         - name: Read Emails
           env:
             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          run: python scripts/read_emails.py
+            TOKEN_JSON: ${{ secrets.TOKEN_JSON }}
+          run: |
+            echo "${TOKEN_JSON}" > token.json
+            python scripts/read_emails.py
+            rm token.json
         - name: Fetch Metadata
           env:
             AV_API_KEY: ${{ secrets.AV_API_KEY }}
