@@ -1,0 +1,10 @@
+include
+lib
+output
+bin
+__pycache__
+pyvenv.cfg
+
+.env
+credentials.json
+token.json

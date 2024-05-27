@@ -1,0 +1,30 @@
+name: Build & Test
+on:
+  push:
+    branches:
+      - prod
+  pull_request:
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest # Use the latest version of Ubuntu
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v3
+
+      - name: Install dependencies
+        run: cd view && npm install
+
+      - name: Run tests
+        run: npm test
+
+  deploy:
+    needs: build
+    name: Deploy
+    if: github.ref == 'refs/heads/prod'
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
