@@ -29,4 +29,4 @@ jobs:
 
       - env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npx wrangler pages prod view/build
+        run: cd view && npx wrangler pages deploy --project-name lokeel-stock-predictor --branch prod build
