@@ -1,0 +1,52 @@
+name: Cron
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v4
+          with:
+            ref: prod
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.12'
+            cache: 'pip' # caching pip dependencies
+        - run: pip install -r scripts/requirements.txt
+        - name: Read Emails
+          env:
+            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          run: python scripts/read_emails.py
+        - name: Fetch Metadata
+          env:
+            AV_API_KEY: ${{ secrets.AV_API_KEY }}
+          run: python scripts/fetch_labels.py
+        - name: Update Labels
+          run: python scripts/set_labels.py
+        
+        - name: Predict using Word Vector Model
+          run: python scripts/predict/predict.py
+        - name: Predict using Embedding Model
+          run: python scripts/predict/predict_embeddings.py
+
+        - name: Evalute Performance
+          run: python scripts/predict/evaluate.py
+
+        - name: Update Front End Data
+          run: ./scripts/update_front_end.sh
+
+        - name: Update Data
+          run: |
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/data.db view/src/contexts/predictions/data/
+            git commit -m "Updating Prediction Data for $(date)"
+            git push
+  deploy:
+    needs: scripts
+    name: Deploy
+    if: github.ref == 'refs/heads/prod'
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
