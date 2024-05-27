@@ -20,7 +20,7 @@ jobs:
         run: cd view && npm install
 
       - name: Run tests
-        run: npm test
+        run: cd view && npm test
 
   deploy:
     needs: build

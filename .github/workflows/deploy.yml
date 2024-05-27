@@ -21,7 +21,7 @@ jobs:
         run: cd view && npm install
 
       - name: Build
-        run: npm run build
+        run: cd view && npm run build
 
       - uses: cloudflare/wrangler-action@v3
         with:
