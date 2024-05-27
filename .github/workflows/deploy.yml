@@ -24,7 +24,9 @@ jobs:
       - name: Install dependencies
         run: cd view && npm install
 
-      - name: Build & Deploy
-        env:
+      - name: Build
+        run: cd view && npm run build
+
+      - env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: cd view && npm run build && npx wrangler deploy build
+        run: npx wrangler pages prod view/build
