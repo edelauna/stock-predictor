@@ -2,6 +2,8 @@ name: Cron - Predictions
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '*/5 9-16 * * 1-5'  # every 5 minutes from 9 AM to 4 PM (Monday to Friday)
 
 jobs:
   scripts:
@@ -9,7 +11,7 @@ jobs:
     steps:
         - uses: actions/checkout@v4
           with:
-            ref: ${{ github.event.inputs.branch }}
+            ref: ${{ github.event.inputs.branch || 'prod' }}
             token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
         - uses: actions/setup-python@v5
           with:
