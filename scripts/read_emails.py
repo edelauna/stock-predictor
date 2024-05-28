@@ -82,30 +82,27 @@ def main():
           date_value = est_datetime_obj.strftime("%Y/%m/%d %H:%M:00")
       for part in msg['payload']['parts']:
         if part['mimeType'] == 'text/plain':
-          try:
-            data = part['body']["data"]
-            byte_code = base64.urlsafe_b64decode(data)
+          data = part['body']["data"]
+          byte_code = base64.urlsafe_b64decode(data)
 
-            text = byte_code.decode("utf-8")
-            embeddings = get_embeddings(text)
+          text = byte_code.decode("utf-8")
+          embeddings = get_embeddings(text)
 
-            con = sqlite3.connect("data/data.db")
-            cur = con.cursor()
+          con = sqlite3.connect("data/data.db")
+          cur = con.cursor()
 
-            sql = "INSERT INTO trends (date, text, embeddings) VALUES (?, ?, ?)"
-            data = (date_value, text, embeddings) 
+          sql = "INSERT INTO trends (date, text, embeddings) VALUES (?, ?, ?)"
+          data = (date_value, text, str(embeddings)) 
 
-            cur.execute(sql, data)
-            print(f"Date:{date_value} - inserted")
-            con.commit()
+          cur.execute(sql, data)
+          print(f"Date:{date_value} - inserted")
+          con.commit()
 
-            # mark the message as read (optional)
-            msg  = service.users().messages().modify(userId='me', id=message['id'], body={'removeLabelIds': ['Label_8705966380606725806']}).execute()
-            
-            cur.close()
-            con.close()
-          except BaseException as error:
-            pass
+          # mark the message as read (optional)
+          msg  = service.users().messages().modify(userId='me', id=message['id'], body={'removeLabelIds': ['Label_8705966380606725806']}).execute()
+          
+          cur.close()
+          con.close()
 
   except HttpError as error:
     # TODO(developer) - Handle errors from gmail API.
