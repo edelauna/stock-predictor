@@ -64,6 +64,6 @@ jobs:
   deploy:
     needs: scripts
     name: Deploy
-    if: github.ref == 'refs/heads/prod' && ${{ needs.scripts.outputs.exitcode == 0 }}
+    if: ${{ github.ref == 'refs/heads/prod' && needs.scripts.outputs.exitcode == 0 }}
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
