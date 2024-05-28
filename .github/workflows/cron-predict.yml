@@ -3,7 +3,7 @@ name: Cron - Predictions
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/5 9-16 * * 1-5'  # every 5 minutes from 9 AM to 4 PM (Monday to Friday)
+    - cron: '5 9-16 * * 1-5'  # every 5 minutes from 9 AM to 4 PM (Monday to Friday)
 
 jobs:
   scripts:
