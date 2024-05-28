@@ -92,7 +92,7 @@ def main():
           cur = con.cursor()
 
           sql = "INSERT INTO trends (date, text, embeddings) VALUES (?, ?, ?)"
-          data = (date_value, text, embeddings) 
+          data = (date_value, text, str(embeddings)) 
 
           cur.execute(sql, data)
           print(f"Date:{date_value} - inserted")
