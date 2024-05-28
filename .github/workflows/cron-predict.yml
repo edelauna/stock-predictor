@@ -3,15 +3,17 @@ name: Cron - Predictions
 on:
   workflow_dispatch:
   schedule:
-    - cron: '5 9-16 * * 1-5'  # every 5 minutes from 9 AM to 4 PM (Monday to Friday)
+    - cron: '*/15 9-16 * * 1-5'  # every 15 minutes from 9 AM to 4 PM (Monday to Friday)
 
 jobs:
   scripts:
     runs-on: ubuntu-latest
+    outputs:
+      exitcode: ${{ steps.read-emails.outputs.exitcode }}
     steps:
         - uses: actions/checkout@v4
           with:
-            ref: ${{ github.event.inputs.branch || 'prod' }}
+            ref: ${{ github.event.inputs.branch }}
             token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
         - uses: actions/setup-python@v5
           with:
@@ -22,23 +24,37 @@ jobs:
             pip install -r scripts/requirements.txt
             echo "::endgroup::"
         - name: Read Emails
+          id: read-emails
           env:
             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
             TOKEN_JSON: ${{ secrets.TOKEN_JSON }}
           run: |
+            set +e
             echo "${TOKEN_JSON}" > token.json
             python scripts/read_emails.py
+            echo "exitcode=$?" >> $GITHUB_OUTPUT
             rm token.json
 
+        - name: Fail if Unexpected Error Code
+          run: |
+            if [[ ${{ steps.read-emails.outputs.exitcode }} != "0" && ${{ steps.read-emails.outputs.exitcode }} != "7" ]]; then
+              echo "Exit code was: ${{ steps.read-emails.outputs.exitcode }}"
+              exit 1
+            fi
+
         - name: Predict using Word Vector Model
+          if: ${{ steps.read-emails.outputs.exitcode == 0 }}
           run: python scripts/predict/predict.py
         - name: Predict using Embedding Model
+          if: ${{ steps.read-emails.outputs.exitcode == 0 }}
           run: python scripts/predict/predict_embeddings.py
   
         - name: Update Front End Data
+          if: ${{ steps.read-emails.outputs.exitcode == 0 }}
           run: ./scripts/update_front_end.sh
 
         - name: Update Data
+          if: ${{ steps.read-emails.outputs.exitcode == 0 }}
           run: |
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -48,6 +64,6 @@ jobs:
   deploy:
     needs: scripts
     name: Deploy
-    if: github.ref == 'refs/heads/prod'
+    if: ${{ github.ref == 'refs/heads/prod' && needs.scripts.outputs.exitcode == 0 }}
     uses: ./.github/workflows/deploy.yml
     secrets: inherit

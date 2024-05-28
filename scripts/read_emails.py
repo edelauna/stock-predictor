@@ -67,7 +67,7 @@ def main():
     messages = results.get('messages',[])
     if not messages:
       print('No new messages.')
-      exit(1)
+      exit(7)
     for message in messages:
       msg = service.users().messages().get(userId='me', id=message['id']).execute()                
       for header in msg['payload']['headers']:
