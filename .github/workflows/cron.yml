@@ -9,7 +9,7 @@ jobs:
     steps:
         - uses: actions/checkout@v4
           with:
-            ref: prod
+            ref: ${{ github.event.inputs.branch }}
         - uses: actions/setup-python@v5
           with:
             python-version: '3.12'
