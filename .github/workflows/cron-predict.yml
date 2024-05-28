@@ -37,7 +37,7 @@ jobs:
 
         - name: Fail if Unexpected Error Code
           run: |
-            if [[ ${{ steps.read-emails.outputs.exitcode }} != "0" && ${{ steps.read-emails.outputs.exitcode }} != "777" ]]; then
+            if [[ ${{ steps.read-emails.outputs.exitcode }} != "0" && ${{ steps.read-emails.outputs.exitcode }} != "7" ]]; then
               echo "Exit code was: ${{ steps.read-emails.outputs.exitcode }}"
               exit 1
             fi
