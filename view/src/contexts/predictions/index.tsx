@@ -7,6 +7,9 @@ export interface PredictionStoreState {
   mainPrediction: Prediction;
   performance: Performance
   allLoaded: AllLoadedStatus
+  history: Prediction[]
+  cursor: Date
+  useWordVectors: boolean
 };
 
 const localStorageAllLoadedKey = 'state-all-loaded-local-storage'
@@ -15,7 +18,10 @@ const localStorageAllLoadedValue = localStorage.getItem(localStorageAllLoadedKey
 const initialState = {
   allLoaded: localStorageAllLoadedValue ? localStorageAllLoadedValue : AllLoadedStatus.TODO,
   mainPrediction: transformPrediction(),
-  performance: transformPerformance()
+  performance: transformPerformance(),
+  history: [],
+  cursor: new Date(),
+  useWordVectors: false
 };
 
 type PredictionContext = {
@@ -43,6 +49,26 @@ const reducer: React.Reducer<PredictionStoreState, Actions> = (
         ...state, 
         allLoaded: action.payload
       };
+    case ActionType.UpdateHistory:
+      return {
+        ...state,
+        history: [...state.history, action.payload]
+      };
+    case ActionType.UpdateCursor:
+      return {
+        ...state,
+        cursor: action.payload,
+      }
+    case ActionType.ResetHistory:
+      return {
+        ...state,
+        history: []
+      }
+    case ActionType.UseWordVectors:
+        return {
+          ...state,
+          useWordVectors: !state.useWordVectors
+        }
     default:
       return state;
   }

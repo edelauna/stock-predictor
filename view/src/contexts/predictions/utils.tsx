@@ -50,11 +50,14 @@ export const fetchAll = async (dispatch: React.Dispatch<Actions>) => {
   }
 }
 
+export const INDEX_DB_VERSION = 1
+export const INDEX_DB_NAME = 'myDB'
+
 const initDB = () => {
   return new Promise((resolve, reject) => {
     let db: IDBDatabase;
     // open the connection - rename this later, assuming this is unique per domain
-    const request = indexedDB.open('myDB', 1);
+    const request = indexedDB.open(INDEX_DB_NAME, INDEX_DB_VERSION);
     request.onupgradeneeded = (event) => {
       db = (event.target as IDBOpenDBRequest).result;
 
@@ -66,7 +69,10 @@ const initDB = () => {
     };
     request.onsuccess = (event) => {
       db = (event.target as IDBOpenDBRequest).result;
-      seedDbStore(db).then(() => resolve(true))
+      seedDbStore(db).then(() => {
+        db.close()
+        resolve(true)
+      })
     }
   });
 };
