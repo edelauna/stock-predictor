@@ -40,33 +40,33 @@ export const Historic = () => {
           onChange={handleValueChange}
           disabled={(state.allLoaded!==AllLoadedStatus.DONE) || loading} 
         /> 
-        <div className="flex justify-center mx-auto mt-4">
-          <table className="table-auto min-w-full shadow-md rounded-xl">
-            <thead>
-              <tr className="bg-blue-gray-100 text-gray-200">
-                <th>Date</th>
-                <th>T+1 High Predicted</th>
-                <th>T+1 High Actual</th>
-                <th>T+1 Low Predicted</th>
-                <th>T+1 Low Actual</th>
-                <th>T+2 High Predicted</th>
-                <th>T+2 High Actual</th>
-                <th>T+2 Low Predicted</th>
-                <th>T+2 Low Actual</th>
+        <div className="overflow-auto">
+          <table className="min-w-full divide-y shadow-md rounded-xl">
+            <thead className="sticky top-0">
+              <tr className="text-gray-200">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase sticky bg-black left-0">Date</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">T+1 High Predicted</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">T+1 High Actual</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">T+1 Low Predicted</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">T+1 Low Actual</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">T+2 High Predicted</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">T+2 High Actual</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">T+2 Low Predicted</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">T+2 Low Actual</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y">
               {history.slice(0, 3).map((h, i) =>(
                 <tr key={i}>
-                  <td className="border border-sky-500 py-1 px-2">{h.date.toLocaleDateString()}</td>
-                  <td className="border border-sky-500 py-1 px-4">{useWordVectors ? getPredictedNumber(h.callOneDayVector, h.at!) : getPredictedNumber(h.callOneDay, h.at!)}</td>
-                  <td className="border border-sky-500 py-1 px-4">{getActualNumber(i+1, history, ActualKey.HIGH)}</td>
-                  <td className="border border-sky-500 py-1 px-4">{useWordVectors ? getPredictedNumber(h.putOneDayVector, h.at!) : getPredictedNumber(h.putOneDay, h.at!)}</td>
-                  <td className="border border-sky-500 py-1 px-4">{getActualNumber(i+1, history, ActualKey.LOW)}</td>
-                  <td className="border border-sky-500 py-1 px-4">{useWordVectors ? getPredictedNumber(h.callTwoDayVector, h.at!) : getPredictedNumber(h.callTwoDay, h.at!)}</td>
-                  <td className="border border-sky-500 py-1 px-4">{getActualNumber(i+2, history, ActualKey.HIGH)}</td>
-                  <td className="border border-sky-500 py-1 px-4">{useWordVectors ? getPredictedNumber(h.putTwoDayVector, h.at!) : getPredictedNumber(h.putTwoDay, h.at!)}</td>
-                  <td className="border border-sky-500 py-1 px-4">{getActualNumber(i+2, history, ActualKey.LOW)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap sticky left-0 border border-sky-500 bg-black">{h.date.toLocaleDateString()}</td>
+                  <td className="border border-sky-500 px-6 py-4 whitespace-nowrap">{useWordVectors ? getPredictedNumber(h.callOneDayVector, h.at!) : getPredictedNumber(h.callOneDay, h.at!)}</td>
+                  <td className="border border-sky-500 px-6 py-4 whitespace-nowrap">{getActualNumber(i+1, history, ActualKey.HIGH)}</td>
+                  <td className="border border-sky-500 px-6 py-4 whitespace-nowrap">{useWordVectors ? getPredictedNumber(h.putOneDayVector, h.at!) : getPredictedNumber(h.putOneDay, h.at!)}</td>
+                  <td className="border border-sky-500 px-6 py-4 whitespace-nowrap">{getActualNumber(i+1, history, ActualKey.LOW)}</td>
+                  <td className="border border-sky-500 px-6 py-4 whitespace-nowrap">{useWordVectors ? getPredictedNumber(h.callTwoDayVector, h.at!) : getPredictedNumber(h.callTwoDay, h.at!)}</td>
+                  <td className="border border-sky-500 px-6 py-4 whitespace-nowrap">{getActualNumber(i+2, history, ActualKey.HIGH)}</td>
+                  <td className="border border-sky-500 px-6 py-4 whitespace-nowrap">{useWordVectors ? getPredictedNumber(h.putTwoDayVector, h.at!) : getPredictedNumber(h.putTwoDay, h.at!)}</td>
+                  <td className="border border-sky-500 px-6 py-4 whitespace-nowrap">{getActualNumber(i+2, history, ActualKey.LOW)}</td>
                 </tr>
               ))}
             </tbody>
