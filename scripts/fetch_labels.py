@@ -18,13 +18,13 @@ db_data = cur.fetchall()
 date = db_data[0][0]
 if(date is None):
   print(f"[-]\tExiting no new data.")
-  exit(1)
+  exit(7)
 max_datetime_est = dateutil.parser.parse(date)
 if (current_datetime.date() == max_datetime_est.date()):
-  after_hours_cutoff = time(21, 0)
+  after_hours_cutoff = time(20, 0)
   if (current_datetime.time() < after_hours_cutoff):
     print(f"[-]\tAborting for {current_datetime.date()} since market not yet closed")
-    exit(1)
+    exit(7)
 
 metadata_map = {}
 cur.execute("SELECT date FROM trends where one_day_call IS NULL")

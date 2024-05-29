@@ -2,10 +2,14 @@ name: Cron - Prediction Evaluation
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '*/15 0-8,20-23 * * 1-5'  # every 15 minutes from 12-8 AM and again 8PM-12AM (Monday to Friday)
 
 jobs:
   scripts:
     runs-on: ubuntu-latest
+    outputs:
+      exitcode: ${{ steps.fetch-metadata.outputs.exitcode }}
     steps:
         - uses: actions/checkout@v4
           with:
@@ -21,19 +25,34 @@ jobs:
             echo "::endgroup::"
         
         - name: Fetch Metadata
+          id: fetch-metadata
           env:
             AV_API_KEY: ${{ secrets.AV_API_KEY }}
-          run: python scripts/fetch_labels.py
+          run: |
+            set +e
+            python scripts/fetch_labels.py
+            echo "exitcode=$?" >> $GITHUB_OUTPUT
+        
+        - name: Fail if Unexpected Error Code
+          run: |
+            if [[ ${{ steps.fetch-metadata.outputs.exitcode }} != "0" && ${{ steps.fetch-metadata.outputs.exitcode }} != "7" ]]; then
+              echo "Exit code was: ${{ steps.fetch-metadata.outputs.exitcode }}"
+              exit 1
+            fi
         - name: Update Labels
+          if: ${{ steps.fetch-metadata.outputs.exitcode == 0 }}
           run: python scripts/set_labels.py
         
         - name: Evalute Performance
+          if: ${{ steps.fetch-metadata.outputs.exitcode == 0 }}
           run: python scripts/predict/evaluate.py
 
         - name: Update Front End Data
+          if: ${{ steps.fetch-metadata.outputs.exitcode == 0 }}
           run: ./scripts/update_front_end.sh
 
         - name: Update Data
+          if: ${{ steps.fetch-metadata.outputs.exitcode == 0 }}
           run: |
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -43,6 +62,6 @@ jobs:
   deploy:
     needs: scripts
     name: Deploy
-    if: github.ref == 'refs/heads/prod'
+    if: ${{ github.ref == 'refs/heads/prod' && needs.scripts.outputs.exitcode == 0 }}
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
