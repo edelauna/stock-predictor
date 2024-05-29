@@ -13,7 +13,6 @@ jobs:
     steps:
         - uses: actions/checkout@v4
           with:
-            ref: ${{ github.event.inputs.branch }}
             token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
         - uses: actions/setup-python@v5
           with:
