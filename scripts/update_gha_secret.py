@@ -2,7 +2,6 @@ from base64 import b64encode
 from nacl import encoding, public
 import requests
 import os
-import json
 
 api_key = os.getenv("GH_PERSONAL_ACCESS_TOKEN")
 
@@ -37,9 +36,9 @@ url = "https://api.github.com/repos/edelauna/stock-predictor/actions/secrets/TOK
 
 # Read data from file
 with open("token.json", "r") as file:
-    payload = json.load(file)
+    payload = file.read()
 response = requests.put(url, headers=headers, json={
-  'encrypted_value': encrypt(public_key, str(payload)),
+  'encrypted_value': encrypt(public_key, payload),
   'key_id': key_id
 })
 
