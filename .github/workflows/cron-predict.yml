@@ -33,15 +33,15 @@ jobs:
             set +e
             echo "${TOKEN_JSON}" > token.json
             python scripts/read_emails.py
-            python scripts/update_gha_secret.py
             echo "exitcode=$?" >> $GITHUB_OUTPUT
-            rm token.json
-
         - name: Fail if Unexpected Error Code
           run: |
             if [[ ${{ steps.read-emails.outputs.exitcode }} != "0" && ${{ steps.read-emails.outputs.exitcode }} != "7" ]]; then
               echo "Exit code was: ${{ steps.read-emails.outputs.exitcode }}"
               exit 1
+            else
+              python scripts/update_gha_secret.py
+              rm token.json
             fi
 
         - name: Predict using Word Vector Model
