@@ -14,8 +14,8 @@ export const Historic = () => {
   const { state, dispatch } = useContext(store)
   const [startDate, setStartDate] = useState<Date|null>(null); 
   const [dateValue, setDateValue] = useState<DateValueType>(null); 
-  const { useWordVectors } = state
-  const {loading} = useStoreSideEffect(state, dispatch, startDate, 2)
+  const { useWordVectors, history } = state
+  const {loading} = useStoreSideEffect(state, dispatch, startDate, 5)
   
   const handleValueChange = (newValue: DateValueType) => {
     const newDate = new Date(newValue?.startDate!)
@@ -56,17 +56,17 @@ export const Historic = () => {
               </tr>
             </thead>
             <tbody>
-              {state.history.map((h, i, arr) =>(
+              {history.slice(0, 3).map((h, i) =>(
                 <tr key={i}>
                   <td className="border border-sky-500 py-1 px-2">{h.date.toLocaleDateString()}</td>
                   <td className="border border-sky-500 py-1 px-4">{useWordVectors ? getPredictedNumber(h.callOneDayVector, h.at!) : getPredictedNumber(h.callOneDay, h.at!)}</td>
-                  <td className="border border-sky-500 py-1 px-4">{getActualNumber(i+1, arr, ActualKey.HIGH)}</td>
+                  <td className="border border-sky-500 py-1 px-4">{getActualNumber(i+1, history, ActualKey.HIGH)}</td>
                   <td className="border border-sky-500 py-1 px-4">{useWordVectors ? getPredictedNumber(h.putOneDayVector, h.at!) : getPredictedNumber(h.putOneDay, h.at!)}</td>
-                  <td className="border border-sky-500 py-1 px-4">{getActualNumber(i+1, arr, ActualKey.LOW)}</td>
+                  <td className="border border-sky-500 py-1 px-4">{getActualNumber(i+1, history, ActualKey.LOW)}</td>
                   <td className="border border-sky-500 py-1 px-4">{useWordVectors ? getPredictedNumber(h.callTwoDayVector, h.at!) : getPredictedNumber(h.callTwoDay, h.at!)}</td>
-                  <td className="border border-sky-500 py-1 px-4">{getActualNumber(i+2, arr, ActualKey.HIGH)}</td>
+                  <td className="border border-sky-500 py-1 px-4">{getActualNumber(i+2, history, ActualKey.HIGH)}</td>
                   <td className="border border-sky-500 py-1 px-4">{useWordVectors ? getPredictedNumber(h.putTwoDayVector, h.at!) : getPredictedNumber(h.putTwoDay, h.at!)}</td>
-                  <td className="border border-sky-500 py-1 px-4">{getActualNumber(i+2, arr, ActualKey.LOW)}</td>
+                  <td className="border border-sky-500 py-1 px-4">{getActualNumber(i+2, history, ActualKey.LOW)}</td>
                 </tr>
               ))}
             </tbody>

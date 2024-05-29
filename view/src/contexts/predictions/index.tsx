@@ -12,11 +12,8 @@ export interface PredictionStoreState {
   useWordVectors: boolean
 };
 
-const localStorageAllLoadedKey = 'state-all-loaded-local-storage'
-const localStorageAllLoadedValue = localStorage.getItem(localStorageAllLoadedKey) as AllLoadedStatus
-
 const initialState = {
-  allLoaded: localStorageAllLoadedValue ? localStorageAllLoadedValue : AllLoadedStatus.TODO,
+  allLoaded: AllLoadedStatus.TODO,
   mainPrediction: transformPrediction(),
   performance: transformPerformance(),
   history: [],
@@ -83,7 +80,6 @@ export const PredictionProvider = ({ children }: { children: React.ReactNode }) 
    * side effect - testing saving to localStorage
    */
   useEffect(() => {
-    localStorage.setItem(localStorageAllLoadedKey, state.allLoaded)
     if(state.allLoaded === AllLoadedStatus.TODO)
       fetchAll(dispatch);
   }, [state])
