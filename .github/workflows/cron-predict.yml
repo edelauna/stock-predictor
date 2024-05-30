@@ -64,9 +64,3 @@ jobs:
             git add data/data.db view/src/contexts/predictions/data/
             git commit -m "Updating Prediction Data for $(date)"
             git push
-  deploy:
-    needs: scripts
-    name: Deploy
-    if: ${{ github.ref == 'refs/heads/prod' && needs.scripts.outputs.exitcode == 0 }}
-    uses: ./.github/workflows/deploy.yml
-    secrets: inherit
