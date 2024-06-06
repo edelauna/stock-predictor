@@ -42,6 +42,7 @@ jobs:
               exit 1
             else
               python scripts/update_gha_secret.py
+              echo "Secret expires \t$(jq .expiry token.json)"
               rm token.json
             fi
 
