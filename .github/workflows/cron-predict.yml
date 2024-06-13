@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '*/15 13-20 * * 1-5'  # every 15 minutes from 9 AM to 4 PM (Monday to Friday) EST
+    - cron: '0 * * * *'  # every hour otherwise to refresh
 
 jobs:
   scripts:
@@ -42,7 +43,7 @@ jobs:
               exit 1
             else
               python scripts/update_gha_secret.py
-              echo "Secret expires \t$(jq .expiry token.json)"
+              echo "Secret expires $(jq .expiry token.json)"
               rm token.json
             fi
 
