@@ -62,7 +62,15 @@ print(f"[-]\tFetched up to Time Series (1min): {list(data[TIMESERIES_KEY].keys()
 
 for key in metadata_map:
   k = metadata_map[key]['time_at']['key']
-  metadata_map[key]['time_at']['value'] = data[TIMESERIES_KEY][k]['4. close']
+  value = data[TIMESERIES_KEY].get(k)
+  if value:
+    metadata_map[key]['time_at']['value'] = value['4. close']
+  else:
+    print(f"[-]\tNo {TIMESERIES_KEY} data for: {k}, trying to use day's close")
+    parsed = dateutil.parser.parse(k)
+    adjusted_datetime = parsed.replace(hour=15, minute=59)
+    k = adjusted_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    metadata_map[key]['time_at']['value'] = data[TIMESERIES_KEY][k]['4. close']
 
 url = (
   'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&'
