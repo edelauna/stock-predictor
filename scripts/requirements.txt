@@ -1,4 +1,4 @@
-google_api_python_client==2.137.0
+google_api_python_client==2.142.0
 google_auth_oauthlib==1.2.1
 pynacl==1.5.0
 numpy==2.0.1
