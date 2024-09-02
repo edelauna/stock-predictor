@@ -4,6 +4,7 @@ import sqlite3
 from datetime import datetime, time
 import pytz
 import dateutil.parser
+from joblib import Memory
 
 current_datetime = datetime.now(pytz.timezone('US/Eastern'))
 
@@ -26,13 +27,20 @@ if (current_datetime.date() == max_datetime_est.date()):
     print(f"[-]\tAborting for {current_datetime.date()} since market not yet closed")
     exit(7)
 
-metadata_map = {}
+monthly_metadata_map = {}
 cur.execute("SELECT date FROM trends where one_day_call IS NULL")
 db_data = cur.fetchall()
 print(f"[-]\tFetched {len(db_data)} rows.")
 for item in db_data:
   date = item[0]
   parsed = dateutil.parser.parse(date)
+  
+  year_month = parsed.strftime("%Y-%m")
+  if year_month not in monthly_metadata_map:
+    metadata_map = {}
+  else:
+    metadata_map = monthly_metadata_map[year_month]
+  
   metadata_map[date] = {
     'time_at': {
       'key': parsed.strftime("%Y-%m-%d %H:%M:%S"),
@@ -44,66 +52,89 @@ for item in db_data:
       'low': 0
     }
   }
+  monthly_metadata_map[year_month] = metadata_map
 
 api_key = os.getenv("AV_API_KEY")
 
 SYMBOL = 'SPY'
+API_CACHE="data/.av"
+memory = Memory(API_CACHE, verbose=0)
 
-url = (
-  'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&'
-  f"symbol={SYMBOL}&"
-  'interval=1min&extended_hours=false&'
-  f"apikey={api_key}&outputsize=full"
-)
-r = requests.get(url)
-data = r.json()
-TIMESERIES_KEY='Time Series (1min)'
-print(f"[-]\tFetched up to Time Series (1min): {list(data[TIMESERIES_KEY].keys())[-1]}")
+@memory.cache
+def get_av_data(url):
+  # socks_proxy = "socks5://localhost:9090"
+  # r = requests.get(url, proxies={"http": socks_proxy, "https": socks_proxy})
+  r = requests.get(url)
+  return r.json()
+  
 
-for key in metadata_map:
-  k = metadata_map[key]['time_at']['key']
-  value = data[TIMESERIES_KEY].get(k)
-  if value:
-    metadata_map[key]['time_at']['value'] = value['4. close']
-  else:
-    print(f"[-]\tNo {TIMESERIES_KEY} data for: {k}, trying to use day's close")
-    parsed = dateutil.parser.parse(k)
-    adjusted_datetime = parsed.replace(hour=15, minute=59)
-    k = adjusted_datetime.strftime("%Y-%m-%d %H:%M:%S")
-    metadata_map[key]['time_at']['value'] = data[TIMESERIES_KEY][k]['4. close']
+for year_month in monthly_metadata_map:
+
+  url = (
+    'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&'
+    f"symbol={SYMBOL}&"
+    f"month={year_month}&"
+    'interval=1min&extended_hours=false&'
+    f"apikey={api_key}&outputsize=full"
+  )
+  data = get_av_data(url)
+  TIMESERIES_KEY='Time Series (1min)'
+  print(f"[-]\tFetched up to Time Series (1min): {list(data[TIMESERIES_KEY].keys())[-1]}")
+
+  metadata_map = monthly_metadata_map[year_month]
+  for key in list(metadata_map.keys()):
+    k = metadata_map[key]['time_at']['key']
+    value = data[TIMESERIES_KEY].get(k)
+    if value:
+      metadata_map[key]['time_at']['value'] = value['4. close']
+    else:
+      print(f"[-]\tNo {TIMESERIES_KEY} data for: {k}, trying to use day's close")
+      parsed = dateutil.parser.parse(k)
+      adjusted_datetime = parsed.replace(hour=15, minute=59)
+      k = adjusted_datetime.strftime("%Y-%m-%d %H:%M:%S")
+      try:
+        metadata_map[key]['time_at']['value'] = data[TIMESERIES_KEY][k]['4. close']
+      except KeyError:
+        print(f"[-]\tNo {TIMESERIES_KEY} data for: {key} removing from metadata_map")
+        del metadata_map[key]
 
 url = (
   'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&'
   f"symbol={SYMBOL}&"
+  'outputsize=full&'
   f"apikey={api_key}"
 )
-r = requests.get(url)
-data = r.json()
+
+data = get_av_data(url)
 
 TIMESERIES_KEY='Time Series (Daily)'
 print(f"[-]\tFetched up to Time Series (Daily): {list(data[TIMESERIES_KEY].keys())[-1]}")
-for key in metadata_map:
-  k = metadata_map[key]['eod']['key']
-  metadata_map[key]['eod']['high'] = data[TIMESERIES_KEY][k]['2. high']
-  metadata_map[key]['eod']['low'] = data[TIMESERIES_KEY][k]['3. low']
-# getting high and lows
 
-sql = """
-INSERT INTO metadata(date, at, high, low) 
-VALUES (?, ?, ?, ?)
-ON CONFLICT(date) DO UPDATE SET
-at = excluded.at,
-high = excluded.high,
-low = excluded.low
-"""
-for key in metadata_map:
-    cur.execute(sql, (
-      key,
-      metadata_map[key]['time_at']['value'],
-      metadata_map[key]['eod']['high'],
-      metadata_map[key]['eod']['low']
-    ))
-con.commit()
-print(f"[-]\tUpserted: {len(metadata_map.keys())} new rows")
+for year_month in monthly_metadata_map:
+  metadata_map = monthly_metadata_map[year_month]
+
+  for key in metadata_map:
+    k = metadata_map[key]['eod']['key']
+    metadata_map[key]['eod']['high'] = data[TIMESERIES_KEY][k]['2. high']
+    metadata_map[key]['eod']['low'] = data[TIMESERIES_KEY][k]['3. low']
+  # getting high and lows
+
+  sql = """
+  INSERT INTO metadata(date, at, high, low) 
+  VALUES (?, ?, ?, ?)
+  ON CONFLICT(date) DO UPDATE SET
+  at = excluded.at,
+  high = excluded.high,
+  low = excluded.low
+  """
+  for key in metadata_map:
+      cur.execute(sql, (
+        key,
+        metadata_map[key]['time_at']['value'],
+        metadata_map[key]['eod']['high'],
+        metadata_map[key]['eod']['low']
+      ))
+  con.commit()
+  print(f"[-]\tUpserted: {len(metadata_map.keys())} new rows")
 cur.close()
 con.close()
