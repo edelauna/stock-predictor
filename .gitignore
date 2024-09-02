@@ -11,4 +11,5 @@ historic_credentials.json
 token.json
 
 # local cache
-data/.av
+data/.av/*
+!data/.av/.keep

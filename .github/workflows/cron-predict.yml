@@ -46,7 +46,11 @@ jobs:
               echo "Secret expires $(jq .expiry token.json)"
               rm token.json
             fi
-
+        
+        - name: Check for any missing business days
+          if: ${{ steps.read-emails.outputs.exitcode == 0 }}
+          run: python scripts/missing_business_days.py
+          
         - name: Predict using Word Vector Model
           if: ${{ steps.read-emails.outputs.exitcode == 0 }}
           run: python scripts/predict/predict.py
