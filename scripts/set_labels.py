@@ -11,20 +11,29 @@ def set_labels(forward_days=1):
     call_label_name = 'two_day_call'
     put_label_name = 'two_day_put'
     
-  cur.execute(f"SELECT date FROM trends where {call_label_name} IS NULL")
+  cur.execute(f"""
+              SELECT date FROM trends 
+              WHERE {call_label_name} IS NULL AND embeddings IS NOT NULL
+              """)
   trend_db = cur.fetchall()
   print(f"[-]\tFetched {len(trend_db)} rows to attempt to update {call_label_name} column")
 
   for item in trend_db:
     date = item[0]
     limit = forward_days + 1
-    cur.execute("SELECT * from metadata WHERE date >= ? ORDER BY date ASC LIMIT ?", (date, limit))
+    cur.execute("""
+                SELECT min(date), min(at), min(high), min(low),
+                DATE(REPLACE(date,'/','-')) as day
+                from metadata WHERE date >= ? 
+                GROUP BY day
+                ORDER BY date ASC LIMIT ?
+                """, (date, limit))
     metadata_db = cur.fetchall()
     if(len(metadata_db) < limit):
       print(f"[-]\tNot all metadata is available to set lables for {date}")
       continue
-    (_, at, _, _) = metadata_db[0]
-    (_, _, high, low) = metadata_db[forward_days]
+    (_, at, _, _, _) = metadata_db[0]
+    (_, _, high, low, _) = metadata_db[forward_days]
     call_label = float(high) - float(at)
     put_label = float(low) - float(at)
 
