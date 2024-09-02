@@ -60,10 +60,12 @@ def main():
     with open("token.json", "w") as token:
       token.write(creds.to_json())
 
+  NORMAL_LABEL=('todo','Label_8705966380606725806')
+  #HISTORIC_LABEL=('Trends newsletter','Label_3')
   try:
     # Call the Gmail API
     service = build("gmail", "v1", credentials=creds)
-    results = service.users().messages().list(userId='me', labelIds=['INBOX'], q="label:todo").execute()
+    results = service.users().messages().list(userId='me', labelIds=['INBOX'], q=f"label:{NORMAL_LABEL[0]}").execute()
     messages = results.get('messages',[])
     if not messages:
       print('No new messages.')
@@ -99,7 +101,7 @@ def main():
           con.commit()
 
           # mark the message as read (optional)
-          msg  = service.users().messages().modify(userId='me', id=message['id'], body={'removeLabelIds': ['Label_8705966380606725806']}).execute()
+          msg  = service.users().messages().modify(userId='me', id=message['id'], body={'removeLabelIds': [NORMAL_LABEL[1]]}).execute()
           
           cur.close()
           con.close()
