@@ -40,7 +40,11 @@ def build_model():
   ])
 
 def pred(table_name=ONE_DAY_TABLE_NAME):
-  cur.execute(f"SELECT date FROM trends where trends.date NOT IN (SELECT date from {table_name}) AND trends.date > '2024/05/15' ORDER BY date DESC LIMIT 15")
+  cur.execute(f"""
+              SELECT date FROM trends 
+              WHERE trends.date NOT IN (SELECT date from {table_name}) 
+              AND trends.embeddings IS NOT NULL
+              """)
 
   db_data = cur.fetchall()
   if(len(db_data) == 0):
@@ -61,6 +65,9 @@ def pred(table_name=ONE_DAY_TABLE_NAME):
                 WHERE {call_name} IS NOT NULL AND date < ?
                 """, (date, ))
     db_x = cur.fetchall()
+    if len(db_x) < 15:
+      print(f"[-]\tNot enough data prior to {date} there were only {len(db_x)} records.")
+      continue
     db_data_df = pd.DataFrame(db_x, columns=["date", "text", call_name, put_name])
     db_data_df['label'] = db_data_df[[call_name, put_name]].apply(lambda row: np.array(row), axis=1)
     t = np.vstack(db_data_df['label'])  
