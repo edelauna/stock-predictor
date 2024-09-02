@@ -7,4 +7,8 @@ pyvenv.cfg
 
 .env
 credentials.json
+historic_credentials.json
 token.json
+
+# local cache
+data/.av
