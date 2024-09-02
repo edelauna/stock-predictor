@@ -24,6 +24,14 @@ jobs:
             pip install -r scripts/requirements.txt
             echo "::endgroup::"
         
+        - name: Restore cached API calls
+          id: cache-api-restore
+          uses: actions/cache/restore@v4
+          with:
+            path: |
+              data/.av
+            key: ${{ runner.os }}-api
+        
         - name: Fetch Metadata
           id: fetch-metadata
           env:
@@ -33,6 +41,14 @@ jobs:
             python scripts/fetch_labels.py
             echo "exitcode=$?" >> $GITHUB_OUTPUT
         
+        - name: Save API results
+          id: cache-primes-save
+          uses: actions/cache/save@v4
+          with:
+            path: |
+              data/.av
+            key: ${{ steps.cache-api-restore.outputs.cache-primary-key }}
+
         - name: Fail if Unexpected Error Code
           run: |
             if [[ ${{ steps.fetch-metadata.outputs.exitcode }} != "0" && ${{ steps.fetch-metadata.outputs.exitcode }} != "7" ]]; then
