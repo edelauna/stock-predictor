@@ -20,7 +20,7 @@ for table_name in [ONE_DAY_TABLE_NAME, TWO_DAY_TABLE_NAME]:
 def build_model():
   # Feature Extraction
   text_preprocess = Pipeline([
-      ('count', CountVectorizer(analyzer='char_wb', ngram_range=(1,14))),
+      ('count', CountVectorizer(analyzer='char_wb')),
       ('transform', TfidfTransformer())
   ])
   def date_to_day_of_week(x):
