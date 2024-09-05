@@ -6,6 +6,17 @@ import pytz
 import dateutil.parser
 from joblib import Memory
 
+# Placing at the top of file since cache gets busted if line changed.
+API_CACHE="data/.av"
+memory = Memory(API_CACHE, verbose=0)
+
+@memory.cache
+def get_av_data(url):
+  # socks_proxy = "socks5://localhost:9090"
+  # r = requests.get(url, proxies={"http": socks_proxy, "https": socks_proxy})
+  r = requests.get(url)
+  return r.json()
+
 current_datetime = datetime.now(pytz.timezone('US/Eastern'))
 
 
@@ -28,7 +39,12 @@ if (current_datetime.date() == max_datetime_est.date()):
     exit(7)
 
 monthly_metadata_map = {}
-cur.execute("SELECT date FROM trends where one_day_call IS NULL")
+cur.execute("""
+            SELECT t.date FROM trends t
+            LEFT JOIN metadata m ON t.date = m.date
+            WHERE one_day_call IS NULL
+            AND m.date is NULL
+            """)
 db_data = cur.fetchall()
 print(f"[-]\tFetched {len(db_data)} rows.")
 for item in db_data:
@@ -56,17 +72,7 @@ for item in db_data:
 
 api_key = os.getenv("AV_API_KEY")
 
-SYMBOL = 'SPY'
-API_CACHE="data/.av"
-memory = Memory(API_CACHE, verbose=0)
-
-@memory.cache
-def get_av_data(url):
-  # socks_proxy = "socks5://localhost:9090"
-  # r = requests.get(url, proxies={"http": socks_proxy, "https": socks_proxy})
-  r = requests.get(url)
-  return r.json()
-  
+SYMBOL = 'SPY'  
 
 for year_month in monthly_metadata_map:
 
@@ -102,7 +108,7 @@ url = (
   'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&'
   f"symbol={SYMBOL}&"
   'outputsize=full&'
-  f"apikey={api_key}"
+  f"apikey={api_key}&cache_buster={current_datetime.date()}"
 )
 
 data = get_av_data(url)
