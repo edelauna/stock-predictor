@@ -11,11 +11,13 @@ API_CACHE="data/.av"
 memory = Memory(API_CACHE, verbose=0)
 
 @memory.cache
-def get_av_data(url):
+def get_av_data(url, key):
   # socks_proxy = "socks5://localhost:9090"
   # r = requests.get(url, proxies={"http": socks_proxy, "https": socks_proxy})
   r = requests.get(url)
-  return r.json()
+  data =  r.json()
+  print(f"[-]\tFetched up to {key}: {list(data[key].keys())[-1]}")
+  return data
 
 current_datetime = datetime.now(pytz.timezone('US/Eastern'))
 
@@ -83,9 +85,8 @@ for year_month in monthly_metadata_map:
     'interval=1min&extended_hours=false&'
     f"apikey={api_key}&outputsize=full"
   )
-  data = get_av_data(url)
   TIMESERIES_KEY='Time Series (1min)'
-  print(f"[-]\tFetched up to Time Series (1min): {list(data[TIMESERIES_KEY].keys())[-1]}")
+  data = get_av_data(url, TIMESERIES_KEY)
 
   metadata_map = monthly_metadata_map[year_month]
   for key in list(metadata_map.keys()):
@@ -111,10 +112,8 @@ url = (
   f"apikey={api_key}&cache_buster={current_datetime.date()}"
 )
 
-data = get_av_data(url)
-
 TIMESERIES_KEY='Time Series (Daily)'
-print(f"[-]\tFetched up to Time Series (Daily): {list(data[TIMESERIES_KEY].keys())[-1]}")
+data = get_av_data(url, TIMESERIES_KEY)
 
 for year_month in monthly_metadata_map:
   metadata_map = monthly_metadata_map[year_month]
