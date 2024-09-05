@@ -115,6 +115,8 @@ url = (
 TIMESERIES_KEY='Time Series (Daily)'
 data = get_av_data(url, TIMESERIES_KEY)
 
+upserted = 0
+
 for year_month in monthly_metadata_map:
   metadata_map = monthly_metadata_map[year_month]
 
@@ -140,6 +142,13 @@ for year_month in monthly_metadata_map:
         metadata_map[key]['eod']['low']
       ))
   con.commit()
-  print(f"[-]\tUpserted: {len(metadata_map.keys())} new rows")
+  _upserted = len(metadata_map.keys())
+  print(f"[-]\tUpserted: {_upserted} new rows")
+  upserted += _upserted
 cur.close()
 con.close()
+
+# todo - add a flag in trends db to prevent this
+if(upserted == 0):
+  print(f"[-]\tSetting Error Code 7 for CI - no new data.")
+  exit(7)
