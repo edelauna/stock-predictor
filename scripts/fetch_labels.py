@@ -5,12 +5,23 @@ from datetime import datetime, time
 import pytz
 import dateutil.parser
 from joblib import Memory
+from urllib.parse import urlparse, parse_qs
 
 # Placing at the top of file since cache gets busted if line changed.
 API_CACHE="data/.av"
 memory = Memory(API_CACHE, verbose=0)
 
-@memory.cache
+current_datetime = datetime.now(pytz.timezone('US/Eastern'))
+current_year_month = current_datetime.strftime("%Y-%m")
+
+def cache_validation_cb(metadata):
+  kwargs = metadata['input_args']
+  parsed_url = urlparse(kwargs.get('url'))
+  year_month =  parse_qs(parsed_url.query).get('month')[0]
+  # Only retrieve cache results for not the current month
+  return year_month != current_year_month
+
+@memory.cache(cache_validation_callback=cache_validation_cb)
 def get_av_data(url, key):
   # socks_proxy = "socks5://localhost:9090"
   # r = requests.get(url, proxies={"http": socks_proxy, "https": socks_proxy})
@@ -18,9 +29,6 @@ def get_av_data(url, key):
   data =  r.json()
   print(f"[-]\tFetched up to {key}: {list(data[key].keys())[-1]}")
   return data
-
-current_datetime = datetime.now(pytz.timezone('US/Eastern'))
-
 
 con = sqlite3.connect("data/data.db")
 cur = con.cursor()
