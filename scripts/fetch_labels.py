@@ -17,9 +17,14 @@ current_year_month = current_datetime.strftime("%Y-%m")
 def cache_validation_cb(metadata):
   kwargs = metadata['input_args']
   parsed_url = urlparse(kwargs.get('url'))
-  year_month =  parse_qs(parsed_url.query).get('month')[0]
+  month =  parse_qs(parsed_url.query).get('month')
+  if month and len(month) > 0:
+    year_month = month[0]
+  else:
+    year_month = None
   # Only retrieve cache results for not the current month
-  return year_month != current_year_month
+  return year_month != current_year_month if year_month is not None else False
+  
 
 @memory.cache(cache_validation_callback=cache_validation_cb)
 def get_av_data(url, key):
