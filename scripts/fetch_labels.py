@@ -24,7 +24,7 @@ def cache_validation_cb(metadata):
     year_month = None
   # Only retrieve cache results for not the current month
   return year_month != current_year_month if year_month is not None else False
-  
+
 
 @memory.cache(cache_validation_callback=cache_validation_cb)
 def get_av_data(url, key):
@@ -32,6 +32,10 @@ def get_av_data(url, key):
   # r = requests.get(url, proxies={"http": socks_proxy, "https": socks_proxy})
   r = requests.get(url)
   data =  r.json()
+  if key not in data:
+    print(f"[!] Error fetching data")
+    print(f"[!] Response: {data}")
+    exit(7)
   print(f"[-]\tFetched up to {key}: {list(data[key].keys())[-1]}")
   return data
 
@@ -65,13 +69,13 @@ print(f"[-]\tFetched {len(db_data)} rows.")
 for item in db_data:
   date = item[0]
   parsed = dateutil.parser.parse(date)
-  
+
   year_month = parsed.strftime("%Y-%m")
   if year_month not in monthly_metadata_map:
     metadata_map = {}
   else:
     metadata_map = monthly_metadata_map[year_month]
-  
+
   metadata_map[date] = {
     'time_at': {
       'key': parsed.strftime("%Y-%m-%d %H:%M:%S"),
@@ -87,7 +91,7 @@ for item in db_data:
 
 api_key = os.getenv("AV_API_KEY")
 
-SYMBOL = 'SPY'  
+SYMBOL = 'SPY'
 
 for year_month in monthly_metadata_map:
 
@@ -140,7 +144,7 @@ for year_month in monthly_metadata_map:
   # getting high and lows
 
   sql = """
-  INSERT INTO metadata(date, at, high, low) 
+  INSERT INTO metadata(date, at, high, low)
   VALUES (?, ?, ?, ?)
   ON CONFLICT(date) DO UPDATE SET
   at = excluded.at,
