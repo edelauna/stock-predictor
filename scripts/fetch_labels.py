@@ -35,7 +35,6 @@ def get_av_data(url, key):
   if key not in data:
     print(f"[!] Error fetching data")
     print(f"[!] Response: {data}")
-    exit(7)
   print(f"[-]\tFetched up to {key}: {list(data[key].keys())[-1]}")
   return data
 
