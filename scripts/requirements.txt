@@ -6,6 +6,6 @@ openai==1.55.3
 pandas==2.2.3
 protobuf==6.31.1
 python_dateutil==2.9.0.post0
-pytz==2024.1
+pytz==2026.2
 Requests==2.32.4
 scikit_learn==1.5.2
